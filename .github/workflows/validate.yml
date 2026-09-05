@@ -1,0 +1,112 @@
+name: validate
+
+# Gate for every change reaching main. Direct pushes to main are blocked by
+# branch protection, so in practice these run on the pull request and again on
+# the merge commit.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  skills-spec:
+    name: Agent Skills spec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # skills-ref is the reference validator the agentskills.io spec points at.
+      # It is not published to PyPI, so it is installed from source.
+      - name: Install skills-ref
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/agentskills/agentskills.git /tmp/agentskills
+          pip install --quiet -e /tmp/agentskills/skills-ref
+          skills-ref --version
+
+      - name: Validate every skill
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          dirs=(skills/*/)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "FAIL: no skill directories found under skills/"
+            exit 1
+          fi
+          rc=0
+          for d in "${dirs[@]}"; do
+            echo "::group::${d}"
+            skills-ref validate "${d%/}" || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
+
+  plugin-manifest:
+    name: Plugin and marketplace manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code CLI
+        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code
+
+      # --strict turns warnings into errors, which is what Anthropic's docs
+      # recommend for CI. Manifest validation is local and needs no auth.
+      - name: Validate manifests
+        run: claude plugin validate . --strict
+
+      - name: Validate skill components
+        run: claude plugin validate ./skills --strict
+
+  version-bump:
+    name: Plugin version bumped
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Ported from the yvip-ai plugin's GitLab equivalent: a change that does
+      # not raise .claude-plugin/plugin.json version cannot reach main.
+      - name: Check semver bump
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          FILE=".claude-plugin/plugin.json"
+          git fetch --quiet --depth=1 origin "$BASE"
+          NEW=$(jq -r '.version' "$FILE")
+          OLD=$(git show "origin/$BASE:$FILE" 2>/dev/null | jq -r '.version' || echo "")
+          echo "base=$BASE  old=$OLD  new=$NEW"
+
+          if [ -z "$NEW" ] || [ "$NEW" = "null" ]; then
+            echo "FAIL: $FILE has no .version"
+            exit 1
+          fi
+          if [ -z "$OLD" ] || [ "$OLD" = "null" ]; then
+            echo "OK: no baseline version on $BASE (treated as first release)"
+            exit 0
+          fi
+          if [ "$NEW" = "$OLD" ]; then
+            echo "FAIL: version not bumped (still $NEW). Raise .version in $FILE per semver."
+            exit 1
+          fi
+          HIGHER=$(printf '%s\n%s\n' "$OLD" "$NEW" | sort -V | tail -n1)
+          if [ "$HIGHER" != "$NEW" ]; then
+            echo "FAIL: version must increase ($OLD -> $NEW goes backwards)."
+            exit 1
+          fi
+          echo "OK: version bumped $OLD -> $NEW"

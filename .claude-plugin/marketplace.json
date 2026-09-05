@@ -1,6 +1,9 @@
 {
   "name": "maemresen",
-  "owner": { "name": "Emre Sen" },
+  "description": "Personal Agent Skills for the developer environment — terminals, shells, and the traps that cost an hour to discover",
+  "owner": {
+    "name": "Emre Sen"
+  },
   "plugins": [
     {
       "name": "personal-ai",
