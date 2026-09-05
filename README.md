@@ -23,13 +23,25 @@ runtime can load. Packaged as a Claude Code plugin for convenience, not as a dep
 
 ## Install a single skill, any runtime
 
-No plugin needed — a skill is one file:
+No plugin needed. A skill is a directory: `SKILL.md` plus a `references/` folder the
+runtime loads on demand, so copy the whole thing rather than the one file.
 
 ```sh
-mkdir -p ~/.claude/skills/kitty-terminal-setup
-curl -fsSL https://raw.githubusercontent.com/maemresen/agent-skills/main/skills/kitty-terminal-setup/SKILL.md \
-  -o ~/.claude/skills/kitty-terminal-setup/SKILL.md
+git clone --depth 1 https://github.com/maemresen/agent-skills /tmp/agent-skills
+cp -R /tmp/agent-skills/skills/kitty-terminal-setup ~/.claude/skills/
 ```
+
+## Layout
+
+```
+skills/<skill-name>/
+  SKILL.md          # frontmatter + mental model + cheap-to-state traps
+  references/       # depth, loaded only when the task calls for it
+```
+
+`SKILL.md` stays small on purpose. The frontmatter `description` is the routing surface a
+runtime reads to decide whether to load the skill at all, and everything with real depth
+sits behind a relative link so it costs nothing until it is needed.
 
 ## Scope
 
