@@ -79,8 +79,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Ported from the yvip-ai plugin's GitLab equivalent: a change that does
-      # not raise .claude-plugin/plugin.json version cannot reach main.
+      # A change that does not raise the version in .claude-plugin/plugin.json
+      # cannot reach main.
       - name: Check semver bump
         env:
           BASE: ${{ github.base_ref }}
