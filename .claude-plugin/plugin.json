@@ -1,0 +1,9 @@
+{
+  "name": "personal-ai",
+  "version": "0.1.0",
+  "description": "Personal agent skills (agentskills.io spec) for the developer environment — terminals, shells, and the traps that cost an hour to discover",
+  "author": {
+    "name": "Emre Sen"
+  },
+  "skills": "./skills"
+}

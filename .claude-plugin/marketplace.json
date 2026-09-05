@@ -1,0 +1,11 @@
+{
+  "name": "maemresen",
+  "owner": { "name": "Emre Sen" },
+  "plugins": [
+    {
+      "name": "personal-ai",
+      "source": "./",
+      "description": "Personal, tool-neutral agent skills for the developer environment"
+    }
+  ]
+}
