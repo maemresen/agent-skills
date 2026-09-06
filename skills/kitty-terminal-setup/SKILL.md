@@ -169,6 +169,9 @@ Three of these have enough depth to live in `references/`:
 - **Option is not Alt** — `opt+…` bindings type accents until you set `macos_option_as_alt`,
   and even then Option+Arrow still will not jump words.
   See [`references/keyboard.md`](references/keyboard.md).
+- **Rebinding a key reports nothing when it displaces a default** — `Cmd+K`, `Cmd+L` and
+  `Cmd+Shift+I` are all taken by kitty already, so IJKL pane navigation on Command silently
+  removes three actions. See [`references/splits-and-tabs.md`](references/splits-and-tabs.md).
 - **A background image that fails to load reports nothing** — no error, no warning, no log
   line. See [`references/background-images.md`](references/background-images.md).
 
