@@ -41,22 +41,28 @@ map cmd+d       launch --location=vsplit --cwd=current
 map cmd+shift+d launch --location=hsplit --cwd=current
 
 # navigate (IJKL is one ergonomic choice; arrows below are the other)
-map opt+i neighboring_window up
-map opt+j neighboring_window left
-map opt+k neighboring_window down
-map opt+l neighboring_window right
+# i=up  j=left  k=down  l=right. Read the shadowing note before you use this.
+map cmd+i neighboring_window up
+map cmd+j neighboring_window left
+map cmd+k neighboring_window down
+map cmd+l neighboring_window right
 map cmd+opt+up    neighboring_window up
 map cmd+opt+down  neighboring_window down
 map cmd+opt+left  neighboring_window left
 map cmd+opt+right neighboring_window right
 
 # move a pane around the tree
-map opt+shift+i move_window up
-map opt+shift+j move_window left
-map opt+shift+k move_window down
-map opt+shift+l move_window right
+map cmd+shift+i move_window up
+map cmd+shift+j move_window left
+map cmd+shift+k move_window down
+map cmd+shift+l move_window right
 map cmd+shift+left  move_window_backward
 map cmd+shift+right move_window_forward
+
+# re-home the three defaults the IJKL block above takes
+map ctrl+cmd+k clear_terminal to_cursor active
+map ctrl+cmd+l clear_terminal last_command active
+map cmd+r      set_tab_title
 
 # resize
 map cmd+ctrl+left  resize_window narrower
@@ -80,18 +86,40 @@ is `fat`, not `splits`. Set it explicitly.
 | tmux | kitty | source |
 |---|---|---|
 | `prefix %` / `"` | `Cmd+D` / `Cmd+Shift+D` | configured above |
-| `prefix ←↑↓→` | `Opt+I/J/K/L` or `Cmd+Opt+arrows` | configured above |
+| `prefix ←↑↓→` | `Cmd+I/J/K/L` or `Cmd+Opt+arrows` | configured above |
 | `prefix z` | `Cmd+Shift+Z` | configured above |
 | `prefix {` / `}` | `Cmd+Shift+←` / `Cmd+Shift+→` | configured above |
 | `prefix Ctrl+arrows` (resize) | `Cmd+Ctrl+arrows` | configured above |
 | `prefix !` (break pane) | `Cmd+Shift+N` | configured below |
 | `prefix 0-9` | `Cmd+1..9` | configured above |
-| `prefix ,` (rename) | `Shift+Cmd+I` | **kitty default** |
+| `prefix ,` (rename) | `Cmd+R` (default `Shift+Cmd+I`, displaced above) | configured above |
 | `prefix Space` | `Ctrl+Shift+L` (next layout) | **kitty default** |
 | — | `Cmd+Shift+R` rotate split axis | no tmux equivalent |
 
 With `enabled_layouts splits,stack` there are only two layouts, so `Ctrl+Shift+L` and
 `Cmd+Shift+Z` do much the same thing.
+
+### IJKL on Command silently shadows three defaults
+
+Command is the natural modifier for IJKL on macOS, and it costs you three kitty defaults with
+no warning of any kind:
+
+| Key | Default it takes |
+|---|---|
+| `Cmd+K` | `clear_terminal to_cursor active` |
+| `Cmd+L` | `clear_terminal last_command active` |
+| `Cmd+Shift+I` | `set_tab_title` |
+
+Nothing reports the collision. The last `map` for a key wins, the displaced action is simply
+gone, and you find out weeks later when clearing the screen stops working. Re-home all three,
+as in the block above.
+
+### IJKL on Option needs `macos_option_as_alt yes`
+
+The other obvious modifier has its own trap: `Option+I` is the macOS dead key for `ˆ`, so
+`map opt+i …` types an accent instead of moving the focus, and only on the letters that carry
+a dead key. Set `macos_option_as_alt yes` and restart kitty, or use Command as above. See
+[`keyboard.md`](keyboard.md) for the full cost of that setting.
 
 ### `layout_action rotate` is per-split
 
